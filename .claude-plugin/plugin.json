@@ -1,0 +1,25 @@
+{
+  "name": "credible",
+  "displayName": "Credible",
+  "description": "Credible analysis tools (Malloy semantic model search, query execution, and analysis skills) for your Credible workspaces.",
+  "version": "0.0.1",
+  "author": {
+    "name": "Credible Data"
+  },
+  "homepage": "https://credibledata.com",
+  "repository": "https://github.com/credibledata/credible-plugin",
+  "license": "LicenseRef-Credible-Proprietary",
+  "keywords": [
+    "malloy",
+    "analysis",
+    "data",
+    "semantic-model",
+    "credible"
+  ],
+  "mcpServers": {
+    "Credible": {
+      "type": "http",
+      "url": "https://mcp.credibledata.com/global/"
+    }
+  }
+}

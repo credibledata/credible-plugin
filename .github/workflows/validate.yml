@@ -1,0 +1,28 @@
+name: validate
+
+# Runs `claude plugin validate` against the plugin tree on every push to main
+# and on pull requests. Anthropic's directory CI runs the same validator on
+# every commit it ingests, so failing here is a strong signal something will
+# bounce. Keep this workflow lightweight so we can iterate quickly.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Show claude version
+        run: claude --version
+
+      - name: Validate plugin manifest
+        run: claude plugin validate .
