@@ -75,7 +75,7 @@ Claude will call `list_workspaces` and summarize the orgs / workspaces it sees, 
 
 > *"What was our total revenue for each region in Q1 of last year?"*
 
-Claude will use the plugin's tools and skills to identify the right `revenue` measure and `region` dimension in the workspace's semantic model (`get_context`), compose a valid Malloy query with the appropriate time filter, run it (`execute_query`), and return both the table and a renderable chart spec. The `analysis-workflow` and `malloy-charts` skills guide it through each step.
+Claude will use the plugin's tools and skills to identify the right `revenue` measure and `region` dimension in the workspace's semantic model (`get_context`), compose a valid Malloy query with the appropriate time filter, run it (`execute_query`), and return both the table and a renderable chart spec. The `credible-analysis` and `malloy-charts` skills guide it through each step.
 
 ### 3. A more advanced analytical question
 

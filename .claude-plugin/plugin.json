@@ -2,7 +2,7 @@
   "name": "credible",
   "displayName": "Credible",
   "description": "Credible analysis tools (Malloy semantic model search, query execution, and analysis skills) for your Credible workspaces.",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "author": {
     "name": "Credible Data"
   },
