@@ -1,0 +1,15 @@
+{
+  "name": "credible",
+  "owner": {
+    "name": "Credible Data",
+    "url": "https://credibledata.com"
+  },
+  "plugins": [
+    {
+      "name": "credible",
+      "source": "./",
+      "description": "Credible analysis tools (Malloy semantic model search, query execution, and analysis skills) for your Credible workspaces.",
+      "homepage": "https://credibledata.com"
+    }
+  ]
+}
