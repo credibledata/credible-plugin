@@ -1,0 +1,22 @@
+{
+  "name": "credible",
+  "interface": {
+    "displayName": "Credible"
+  },
+  "plugins": [
+    {
+      "name": "credible",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/credibledata/credible-plugin.git",
+        "path": "./codex",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

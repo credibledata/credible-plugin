@@ -4,12 +4,15 @@
     "name": "Credible Data",
     "url": "https://credibledata.com"
   },
+  "description": "Credible analysis tools (Malloy semantic model search, query execution, and analysis skills) for your Credible workspaces.",
   "plugins": [
     {
       "name": "credible",
       "source": "./",
+      "displayName": "Credible",
       "description": "Credible analysis tools (Malloy semantic model search, query execution, and analysis skills) for your Credible workspaces.",
-      "homepage": "https://credibledata.com"
+      "homepage": "https://credibledata.com",
+      "category": "Productivity"
     }
   ]
 }

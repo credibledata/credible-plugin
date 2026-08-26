@@ -5,9 +5,11 @@ description: Chart selection guidance and renderer reference for Malloy views. U
 
 # Chart Selection for Malloy
 
-> Malloy uses Vega-Lite under the hood. `#` tags control visualization. Call the available Malloy docs search tool with the topic `"rendering"` for the latest docs. In app agents, use `mcp__credible__search_malloy_docs`.
+> Malloy uses Vega-Lite under the hood. `#` tags control visualization. Call `search_malloy_docs` with topic "rendering" for the full tag reference (or see https://docs.malloydata.dev/documentation/visualizations/overview).
 
-## Decision Tree — Which Chart?
+> **Tool names** are written bare here - `get_context`, `execute_query`, `search_malloy_docs`. The exact prefixed name depends on the host surface; match each against the tools you actually have.
+
+## Decision Tree: Which Chart?
 
 | Data Shape | Default Choice |
 |-----------|---------------|
@@ -35,12 +37,11 @@ description: Chart selection guidance and renderer reference for Malloy views. U
 
 **Constraints:**
 - ONE aggregate per chart view (charts render only the first; use `y=['a','b']` for multi-measure)
-- No fixed scale on measure definitions — use `# currency` not `# currency=usd0m`
+- No fixed scale on measure definitions: use `# currency` not `# currency=usd0m`
 - One tag per line
 - Alias joined fields in `group_by` before `order_by`
 - Define measures in source, not in views
 
----
 
 ## Chart Types
 
@@ -88,7 +89,7 @@ view: correlation is { group_by: customer_id, aggregate: avg_price, total_quanti
 
 ### `# shape_map`
 
-Choropleth — US states only. Fields: state name, value.
+Choropleth. US states only. Fields: state name, value.
 
 ```malloy
 # shape_map
@@ -97,9 +98,8 @@ view: by_state is { group_by: state, aggregate: revenue }
 
 ### `# segment_map`
 
-Route map — US only. Fields: start_lat, start_lon, end_lat, end_lon, color.
+Route map. US only. Fields: start_lat, start_lon, end_lat, end_lon, color.
 
----
 
 ## Layout Types
 
@@ -124,20 +124,75 @@ view: summary is {
 
 ### `# dashboard`
 
-Multi-tile layout. Use `# break` to force new row.
+Card-based multi-tile layout. Apply to a view whose body is a nested query; the view's own fields lay out automatically:
+
+- `group_by` dimensions -> a row header (repeats once per row; omit for a single block)
+- `aggregate` measures -> KPI cards, one per measure
+- each `nest:` -> a tile, rendered by the tag above it (`# table` default, or `# bar_chart` / `# line_chart` / `# big_value`)
+
+**Two modes.** Flex (default): tiles flow and wrap; `# break` forces a new row. Columns: `# dashboard { columns=N }` lays tiles into N equal columns, `# colspan=n` widens a tile, `# break` starts a new row, overflow wraps.
+
+```malloy
+// Flex: measures become KPI cards, the nest becomes a tile
+# dashboard
+view: overview is {
+  group_by: category
+  # currency
+  aggregate:
+    avg_retail is retail_price.avg()
+    sum_retail is retail_price.sum()
+  nest:
+    # bar_chart
+    by_brand is { group_by: brand, aggregate: avg_retail is retail_price.avg(), limit: 10 }
+}
+
+// Columns: # colspan widens tiles, # break ends a row
+# dashboard { columns=12 }
+view: layout is {
+  group_by: category
+  # currency
+  aggregate:
+    # colspan=4
+    avg_retail is retail_price.avg()
+    # colspan=4
+    sum_retail is retail_price.sum()
+    # colspan=4
+    max_retail is retail_price.max()
+  nest:
+    # break
+    # colspan=6
+    # bar_chart
+    # subtitle="Top brands"
+    by_brand_chart is { group_by: brand, aggregate: avg_retail is retail_price.avg(), limit: 8 }
+    # colspan=6
+    by_brand_table is { group_by: brand, aggregate: product_count is count(), limit: 8 }
+}
+```
+
+**Tags:** `# dashboard { columns=N }` (columns mode), `{ gap=PX }` (tile spacing, default 16; never a mode), `{ table.max_height=PX|none }` (cap table tiles). On a measure or nest: `# colspan=N` (columns mode only), `# break` (both modes), `# subtitle="..."` (tile), `# borderless` (drop card chrome), `# label="..."` (card title).
+
+For rich KPI cards (sparklines, comparison deltas, several metrics on one card) nest a `# big_value` view instead of relying on the dashboard's own measures:
 
 ```malloy
 # dashboard
-view: overview is {
-  nest: # big_value
-    kpis is { ... }
-  nest: # line_chart
-    trend is { ... }
-  # break
-  nest: # bar_chart
-    breakdown is { ... }
+view: kpis is {
+  group_by: category
+  nest:
+    # big_value
+    revenue_card is {
+      aggregate:
+        # label="Revenue"
+        # currency
+        # big_value { sparkline=trend }
+        total_revenue is retail_price.sum()
+      # line_chart { size=spark y.independent=true }
+      # hidden
+      nest: trend is { group_by: bucket is floor(id / 100)::number, aggregate: total_revenue is retail_price.sum(), order_by: bucket, limit: 20 }
+    }
 }
 ```
+
+**Rules:** `# dashboard` needs a nested-query view (no effect on a scalar). `# colspan` works only in columns mode and is ignored (warns) in flex. `columns` is any positive integer; a `# colspan` over the column count clamps to a full row. Style tiles via the instance theme, or theme the views inside with `# theme.*` (see Theming below).
 
 ### `# pivot`
 
@@ -188,7 +243,6 @@ view: segments is {
 
 Default (implicit). Use explicitly for `.size=fill` property.
 
----
 
 ## Field Formatting Tags
 
@@ -196,7 +250,7 @@ Default (implicit). Use explicitly for `.size=fill` property.
 |-----|---------|-----------|
 | `# number` | Numeric formatting | `=auto` (K/M/B), `=id` (no commas), `=1k`, `=1m` |
 | `# percent` | Percentages | (none needed) |
-| `# currency` | Money | `=usd2m` (USD, 2 decimals, millions) — scale only in views |
+| `# currency` | Money | `=usd2m` (USD, 2 decimals, millions); scale only in views |
 | `# duration` | Time durations | `=seconds`, `=minutes`, `=hours`, `=days` |
 | `# data_volume` | Storage sizes | `=bytes`, `=kb`, `=mb`, `=gb` |
 | `# link` | Hyperlinks | `.url_template="https://example.com/$$"` |
@@ -221,10 +275,46 @@ Default (implicit). Use explicitly for `.size=fill` property.
 ```malloy
 ## viz.line_chart.defaults.y.independent=true
 ## viz.bar_chart.defaults.stack
-## theme.fontFamily="Inter, sans-serif"
 ```
 
----
+## Theming
+
+Publisher styles charts and tables from one structured theme. The instance sets it (in `publisher.config.json`'s `theme` block or the **Settings, then Theme** editor); a model overrides it per result with `# theme.*` annotations, or model-wide with `## theme.*`. Per-chart annotations use the same nested `palette.*` / `font.*` vocabulary as the config, not flat key names, and they win over the instance theme for the keys they set. The forms:
+
+| Annotation | Controls | Modes |
+|-----------|----------|-------|
+| `# theme.palette.series` | Categorical series colors (array) | shared |
+| `# theme.palette.background.{light,dark}` | Chart canvas + table background | per-mode |
+| `# theme.palette.tableHeader.{light,dark}` | Table header text color | per-mode |
+| `# theme.palette.tableHeaderBackground.{light,dark}` | Table header row background | per-mode |
+| `# theme.palette.tableBody.{light,dark}` | Table body text color | per-mode |
+| `# theme.palette.tile.{light,dark}` | Dashboard tile background | per-mode |
+| `# theme.palette.tileTitle.{light,dark}` | Dashboard tile title color | per-mode |
+| `# theme.palette.mapColor.{light,dark}` | Choropleth gradient (`# shape_map` / `# segment_map`) | per-mode |
+| `# theme.font.family` | Font for all rendered text | shared |
+| `# theme.font.size` | Table font size (px) | shared |
+
+The seven `palette.*` color keys each take a `.light` and/or `.dark` variant so dark mode gets its own value. `palette.series`, `font.family`, and `font.size` are single values shared across modes.
+
+```malloy
+// Model-wide defaults (## applies to every view in the model):
+## theme.palette.series = ["#14b3cb", "#e47404", "#1474a4"]
+## theme.font.family = "Inter, sans-serif"
+
+// Per-view override (# applies to this result only; beats the instance theme):
+# theme.palette.background.light = "#fafafa"
+# theme.palette.background.dark = "#111111"
+# theme.palette.tableHeader.dark = "#94a3b8"
+view: revenue_by_month is {
+  group_by: month
+  aggregate: revenue
+}
+```
+
+**Precedence**, highest to lowest, per key: `# theme.*` on the view, then `## theme.*` model default, then the instance theme, then Publisher's built-in defaults. A per-chart annotation overrides the instance for the keys it sets; unset keys fall through to the instance. (This is the reverse of a bare `@malloydata/render` embed, where the embedder wins: Publisher reads the annotation itself and layers it on top.)
+
+Quote values that contain spaces or a leading `#`. The light/dark default (`defaultMode`) and the toggle lock (`allowUserToggle`) are instance-only: set them in the config `theme` block or the editor, not as annotations. The malloy-gotchas-rendering skill lists the annotation forms that look valid but do nothing.
+
 
 ## Advanced Patterns
 
@@ -280,13 +370,17 @@ view: explorer is {
 
 ### Distribution (Histogram)
 
-Call `search_malloy_docs("autobin")` for syntax:
+There is no auto-binning function: `autobin(...)` does not exist and fails with `Unknown function 'autobin'`. Bin by arithmetic, choosing the width from the column's actual range: query `min`, `max` and a few percentiles first, and say in the view's doc where the width came from. A bin width nobody derived is a business decision in disguise.
+
 ```malloy
 # bar_chart
-view: price_dist is { group_by: bucket is autobin(price, 20), aggregate: order_count }
+view: price_dist is {
+  group_by: bucket is floor(price / 20) * 20   // 20 is the bin width, from the observed range
+  aggregate: order_count is count()
+  order_by: bucket
+}
 ```
 
----
 
 ## Patterns for Missing Chart Types
 
@@ -299,13 +393,11 @@ view: price_dist is { group_by: bucket is autobin(price, 20), aggregate: order_c
 | Funnel | `# bar_chart` with ordered stages |
 | Gauge/bullet | `# big_value` with `.comparison_field` |
 
----
 
 ## Chart Annotations on Queries with `nest:`
 
 A top-level chart tag (e.g., `# bar_chart`) renders only the outer query; any `nest:` views are silently hidden from the rendering (still in raw data). To show nests, use `# dashboard` on the outer query with chart tags on each nest. Otherwise, drop the `nest:`.
 
----
 
 ## Common Mistakes
 
@@ -318,9 +410,9 @@ A top-level chart tag (e.g., `# bar_chart`) renders only the outer query; any `n
 | Sparkline not showing | Add `# hidden` to nested view AND reference in `.sparkline=` |
 | Pivot > 30 columns | Filter/limit the nested group_by |
 
-NOTE: The term 'constructor' is reserved term in vege-lite. If the word 'constructor' appears in the query, it will cause the rendering to fail. Never use it in a query and avoid using it as a dimension in a model.
+NOTE: The term 'constructor' is a reserved term in Vega-Lite. If the word 'constructor' appears in the query, it will cause the rendering to fail. Never use it in a query and avoid using it as a dimension in a model.
 
-Call the available Malloy docs search tool for: `"bar charts"`, `"line charts"`, `"dashboards"`, `"autobin"`, `"percent of total"`, `"comparing timeframes"`, `"pivots"`.
+For more patterns, call `search_malloy_docs` with topics like "bar charts", "line charts", "dashboards", "histograms", "percent of total", "comparing timeframes", or "pivots".
 
 ## Further Reading
 

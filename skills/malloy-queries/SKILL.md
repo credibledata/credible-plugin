@@ -1,11 +1,13 @@
 ---
 name: malloy-queries
-description: Malloy query patterns, syntax rules, and chart annotation reference. Consult before writing or debugging any query — covers dates, aggregates vs dimensions, join paths, filters, string matching, and…
+description: Malloy query patterns, syntax rules, and chart annotation reference. Consult before writing or debugging any query. Covers dates, aggregates vs dimensions, join paths, filters, string matching, and…
 ---
 
 # Malloy Query Reference
 
-Only use field names returned by `mcp__credible__get_context`. Never invent entities or guess field names.
+Only use field names defined in the model. Ground yourself first with `get_context`; never invent entities or guess field names.
+
+> **Tool names** are written bare here - `get_context`, `execute_query`, `search_malloy_docs`. The exact prefixed name depends on the host surface; match each against the tools you actually have.
 
 ## Query Patterns
 
@@ -75,7 +77,7 @@ run: source -> {
   aggregate: count()
 }
 ```
-Wrong: `pick('Premium') { ... }` — that's not Malloy syntax.
+Wrong: `pick('Premium') { ... }` (that's not Malloy syntax).
 
 **Window functions with `calculate:`:** running totals, `lag()`, `lead()`, and other window operations belong in `calculate:`, not `aggregate:`.
 ```malloy
@@ -89,7 +91,7 @@ run: source -> {
 
 ## Field Paths and Joins
 
-**Joins are defined in the model** — never write `join_one` / `join_many` inside a query. Every query is rooted on one source, and you reach joined sources via dot notation within the query body.
+**Joins are defined in the model.** Never write `join_one` / `join_many` inside a query. Every query is rooted on one source, and you reach joined sources via dot notation within the query body.
 
 The `->` operator separates a **source** from a **view** (query transformation). It does NOT navigate between joined sources.
 
@@ -102,7 +104,7 @@ Right:
 run: candidate -> { aggregate: hiring_manager.employee_count }
 ```
 
-Use field paths returned by `get_context` **verbatim**. If a result gives you `hiring_manager.employee_count`, do not strip the `hiring_manager.` prefix — that prefix is the join namespace, not a separate source to navigate to.
+Use the field paths defined in the model **verbatim**. If the model defines `hiring_manager.employee_count`, do not strip the `hiring_manager.` prefix; that prefix is the join namespace, not a separate source to navigate to.
 
 ## Dates and Time
 
@@ -121,13 +123,13 @@ where: order_date >= @2020-01-01
 
 ### Truncation accessors return timestamps, not integers
 
-`order_date.month` returns a month-truncated timestamp (e.g., `2025-06-01 00:00:00`), useful for `group_by:`. It is NOT a 1-12 integer, and it cannot be chained — `order_date.
+`order_date.month` returns a month-truncated timestamp (e.g., `2025-06-01 00:00:00`), useful for `group_by:`. It is NOT a 1-12 integer, and it cannot be chained: writing `order_date.month.day` fails. Stop at the first truncation.
 
 Available truncations: `.year`, `.quarter`, `.month`, `.week`, `.day`, `.hour`, `.minute`, `.second`. Stop at the first.
 
 ### `month`, `year`, `day`, `quarter` are reserved words
 
-Don't try to extract a numeric month with a function call — `month(order_date)`, `year(order_date)`, etc. fail to parse in `where:` because the names are reserved. The same names can also break aliases:
+Don't try to extract a numeric month with a function call: `month(order_date)`, `year(order_date)`, etc. fail to parse in `where:` because the names are reserved. The same names can also break aliases:
 
 Wrong: `group_by: month is order_date.month`  →  parse error
 Right: `group_by: order_month is order_date.month`
@@ -135,7 +137,7 @@ Right (when a column is literally named `month`): `` group_by: `month` ``
 
 ### Filtering by date range
 
-For a single contiguous range, prefer the `?` apply operator with a partial-date literal — it's the idiomatic Malloy form and works with date or timestamp fields:
+For a single contiguous range, prefer the `?` apply operator with a partial-date literal: it's the idiomatic Malloy form and works with date or timestamp fields:
 
 ```malloy
 where: order_date ? @2025                    -- anywhere in 2025
@@ -180,8 +182,8 @@ Wrong: `aggregate: full_name is concat(first_name, ' ', last_name)`
 Right: `group_by: full_name is concat(first_name, ' ', last_name)`
 
 **Counting:**
-- `count()` — row count.
-- `count(field)` — **distinct** count of that field.
+- `count()`: row count.
+- `count(field)`: **distinct** count of that field.
 - There is **no** `count(distinct field)` syntax, and `count(*)` is wrong.
 
 Wrong: `count(distinct customer_id)`, `count(*)`
@@ -214,7 +216,7 @@ where: region ? 'US' | 'CA' | 'MX'
 
 ## Order By
 
-`order_by:` can reference a `group_by` alias or a column position. It **cannot** reference a dotted join path — alias the field in `group_by:` first.
+`order_by:` can reference a `group_by` alias or a column position. It **cannot** reference a dotted join path; alias the field in `group_by:` first.
 
 Wrong: `order_by: customer.region`
 Right:
@@ -226,11 +228,11 @@ order_by: region
 
 ## Field Selection Tips
 
-When the model exposes both a human-readable name and an internal code/ID (e.g., `aircraft_model_name` vs `aircraft_model_code`, `customer_name` vs `customer_id`), **prefer the human-readable one** for anything the user will see — group-bys in charts, labels, breakdowns. Check the field descriptions from `get_context` to disambiguate.
+When the model exposes both a human-readable name and an internal code/ID (e.g., `aircraft_model_name` vs `aircraft_model_code`, `customer_name` vs `customer_id`), **prefer the human-readable one** for anything the user will see (group-bys in charts, labels, breakdowns). Check the `#(doc)` field descriptions in the model to disambiguate.
 
 ## Chart Annotations
 
-Chart annotations (e.g., `# bar_chart`, `# line_chart`, `# big_value`) go **before** `run:`, `view:`, or `nest:` — never inside curly braces. Field-level tags (`# label`, `# currency`, `# x`, `# y`) go above individual fields inside the query block:
+Chart annotations (e.g., `# bar_chart`, `# line_chart`, `# big_value`) go **before** `run:`, `view:`, or `nest:`, never inside curly braces. Field-level tags (`# label`, `# currency`, `# x`, `# y`) go above individual fields inside the query block:
 
 ```malloy
 # bar_chart
@@ -251,18 +253,18 @@ Read the `malloy-charts` skill for chart types, properties, data shape requireme
 
 ## When a Query Fails
 
-Read the error against the tables above and below — most failures match a known pattern and can be fixed directly. If the cause is not obvious after that, remove pieces (filters, joins, nested views) until the query compiles; whatever you removed last is the bug.
+Read the error against the tables above and below. Most failures match a known pattern and can be fixed directly. If the cause is not obvious after that, remove pieces (filters, joins, nested views) until the query compiles; whatever you removed last is the bug.
 
 | Error message | Likely cause / fix |
 |---|---|
-| `Cannot compare a timestamp to a number` | Comparing `date.year` to an integer — use `date >= @2020-01-01` instead. |
-| `no viable alternative at input '<word>'` | Reserved keyword used as alias or as a function call (e.g., `month is ...`, `month(date_field)`) — rename, backtick, or use `date_field.month` / a `?`-apply filter instead. |
-| `'<field_name>' is not defined` | Field doesn't exist in the source — re-check against `get_context` results; you may have stripped a join prefix. |
-| `missing {DAY, HOUR, MINUTE, MONTH, QUARTER, SECOND, WEEK, YEAR}` | Chained date property too deep (e.g., `.month.something`) — stop at the first truncation. |
-| `field is a bar chart, but is not a repeated record` | Chart annotation placed inside `{ }` — move `# bar_chart` above `run:` / `view:` / `nest:`. |
+| `Cannot compare a timestamp to a number` | Comparing `date.year` to an integer. Use `date >= @2020-01-01` instead. |
+| `no viable alternative at input '<word>'` | Two common causes: a reserved keyword used as an alias or as a function call (e.g., `month is ...`, `month(date_field)`) - rename, backtick, or use `date_field.month` / a `?`-apply filter instead; or a semicolon used to separate fields within a clause - fields under one `aggregate:`/`group_by:` are comma- or newline-separated, never `;` (the error points at the field right after the `;`). |
+| `'<field_name>' is not defined` | Field doesn't exist in the source. Re-check against the model definition; you may have stripped a join prefix. |
+| `missing {DAY, HOUR, MINUTE, MONTH, QUARTER, SECOND, WEEK, YEAR}` | Chained date property too deep (e.g., `.month.something`). Stop at the first truncation. |
+| `field is a bar chart, but is not a repeated record` | Chart annotation placed inside `{ }`. Move `# bar_chart` above `run:` / `view:` / `nest:`. |
 | `Parser encountered unexpected statement` | Unsupported feature, or syntax placed where Malloy doesn't allow it (e.g., `pick` inside a nested view). |
-| Query silently returns zero rows | Filter value mismatch (case, spelling, format) — run a distinct-values query on the dimension to confirm the literal. |
+| Query silently returns zero rows | Filter value mismatch (case, spelling, format). Run a distinct-values query on the dimension to confirm the literal. |
 
 ## Syntax Help
 
-For anything not covered here, call `mcp__credible__search_malloy_docs`. Read the `malloy-docs-index` skill for a topic index.
+For anything not covered here, call `search_malloy_docs` with the topic (for example "string functions", "nested queries").

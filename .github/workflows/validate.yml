@@ -1,9 +1,15 @@
 name: validate
 
-# Runs `claude plugin validate` against the plugin tree on every push to main
-# and on pull requests. Anthropic's directory CI runs the same validator on
-# every commit it ingests, so failing here is a strong signal something will
-# bounce. Keep this workflow lightweight so we can iterate quickly.
+# Runs `claude plugin validate` against the tree on every push to main and on
+# pull requests. Anthropic's directory CI runs the same validator on every
+# commit it ingests, so failing here is a strong signal something will bounce.
+# Keep this workflow lightweight so we can iterate quickly.
+#
+# Two validations, because this repo root is both a marketplace and a plugin.
+# Pointing the validator at `.` validates the marketplace catalog (it sees
+# .claude-plugin/marketplace.json) but does not descend into skill frontmatter;
+# pointing it at the plugin manifest deep-validates the plugin and its skills.
+# Run both so a broken SKILL.md still fails CI.
 
 on:
   push:
@@ -24,5 +30,8 @@ jobs:
       - name: Show claude version
         run: claude --version
 
-      - name: Validate plugin manifest
+      - name: Validate marketplace catalog
         run: claude plugin validate .
+
+      - name: Validate plugin manifest and skills
+        run: claude plugin validate .claude-plugin/plugin.json

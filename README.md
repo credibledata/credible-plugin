@@ -61,6 +61,12 @@ Grab `credible.zip` from the [latest release](https://github.com/credibledata/cr
 - **Cowork** → *Organization settings → Plugins → Upload plugin*
 - **Claude Desktop** → *Settings → Plugins → Upload plugin*
 
+### OpenCode
+
+The same Credible MCP server and analysis skills are available for
+[OpenCode](https://opencode.ai). See [`opencode/README.md`](./opencode/README.md)
+in this repository for installation and OAuth instructions.
+
 ## Usage examples
 
 > Try these prompts after installing. They assume you have at least one published workspace; Claude will help you pick one if you have several.
@@ -75,13 +81,13 @@ Claude will call `list_workspaces` and summarize the orgs / workspaces it sees, 
 
 > *"What was our total revenue for each region in Q1 of last year?"*
 
-Claude will use the plugin's tools and skills to identify the right `revenue` measure and `region` dimension in the workspace's semantic model (`get_context`), compose a valid Malloy query with the appropriate time filter, run it (`execute_query`), and return both the table and a renderable chart spec. The `credible-analysis` and `malloy-charts` skills guide it through each step.
+Claude will use the plugin's tools and skills to identify the right `revenue` measure and `region` dimension in the workspace's semantic model (`get_context`), compose a valid Malloy query with the appropriate time filter, run it (`execute_query`), and return both the table and a renderable chart spec. The `malloy-analysis` and `malloy-charts` skills guide it through each step.
 
 ### 3. A more advanced analytical question
 
 > *"Compute year-over-year growth in monthly active users, broken down by plan tier, for the last four quarters."*
 
-Year-over-year comparisons aren't a one-liner in Malloy. Claude will use `get_context` to identify the right active-user measure and the `plan_tier` dimension, look up the time-shifting pattern via `search_malloy_docs` if it's unsure, then compose and run a single query via `execute_query`. The `analysis-pitfalls` skill flags caveats — for example, the ambiguity in "monthly" (calendar month vs. trailing 30 days) and partial-period under-counts.
+Year-over-year comparisons aren't a one-liner in Malloy. Claude will use `get_context` to identify the right active-user measure and the `plan_tier` dimension, look up the time-shifting pattern via `search_malloy_docs` if it's unsure, then compose and run a single query via `execute_query`. The `malloy-analysis-pitfalls` skill flags caveats — for example, the ambiguity in "monthly" (calendar month vs. trailing 30 days) and partial-period under-counts.
 
 ## Tools
 
