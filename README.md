@@ -106,7 +106,7 @@ See [PRIVACY.md](./PRIVACY.md) for the full policy. The plugin only shares the O
 
 ## Support
 
-- **Docs**: <https://docs.credibledata.com>
+- **Docs**: <https://www.credibledata.com/docs>
 - **Email**: support@credibledata.com
 - **Issues** (this plugin): <https://github.com/credibledata/credible-plugin/issues>
 

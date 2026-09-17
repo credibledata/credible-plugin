@@ -12,9 +12,10 @@ the source of truth and supersede this file.
 
 Defaults worth holding before you reach for a skill:
 
-- **Two-phase retrieval.** First `get_context` with `source` targets only; then
-  drill into the top sources for dimensions/measures/views. Never query an entity
-  you haven't drilled into and read the docstring for.
+- **Search for the fields, not the source.** Start `get_context` with
+  dimension/measure/view/value targets describing what the question needs; the
+  response groups the matches by source, so one call usually finds the source
+  and the exact field names. Source targets find or browse sources by subject.
 - **Malloy, not SQL.** List filters use `?` alternation (`id ? 6 | 1 | 9`), joins
   live in the model (reach fields by the dot path `get_context` returned), dates
   compare with `@` literals. Stuck on syntax → `search_malloy_docs`.

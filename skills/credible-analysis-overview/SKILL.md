@@ -46,7 +46,7 @@ So "no packages in scope" or an access denial on a workspace with nothing publis
 
 ## Retrieval judgment the tool descriptions don't carry
 
-`get_context`'s own description owns the two-phase search flow and the paging rules; `execute_query`'s owns rendering. Read those there. What follows is only what they leave out.
+`get_context`'s own description owns how targets and scopes behave and the paging rules; `execute_query`'s owns rendering. Read those there. What follows is only what they leave out.
 
 - **Validate a name you already know without spending a search.** Scope the call to the source, set `entity_name` to the field path, and pass `search_text: null`. You get that entity's docstring and its Malloy code. This is the way to read a view's exact filters before running it, and to confirm a field exists before building a query on it.
 - **A name is a pointer, not confirmation.** A field or view you saw in the user's question, in another entity's docstring, or in your own memory is not usable until a result shows it. A plausible name that doesn't exist either errors or quietly returns something else.

@@ -2,7 +2,7 @@
   "name": "credible",
   "displayName": "Credible",
   "description": "Credible analysis tools (Malloy semantic model search, query execution, and analysis skills) for your Credible workspaces.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "author": {
     "name": "Credible Data"
   },
@@ -19,7 +19,12 @@
   "mcpServers": {
     "Credible": {
       "type": "http",
-      "url": "https://mcp.credibledata.com/global/"
+      "url": "https://mcp.credibledata.com/global/",
+      "headers": {
+        "Credible-Client": "claude-plugin",
+        "Credible-Client-Version": "0.2.0",
+        "Credible-Skills-Version": "v0.0.23"
+      }
     }
   }
 }

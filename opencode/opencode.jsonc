@@ -4,7 +4,12 @@
     "credible": {
       "type": "remote",
       "url": "https://mcp.credibledata.com/global/",
-      "enabled": true
+      "enabled": true,
+      "headers": {
+        "Credible-Client": "opencode",
+        "Credible-Client-Version": "0.2.0",
+        "Credible-Skills-Version": "v0.0.23"
+      }
     }
   }
 }
